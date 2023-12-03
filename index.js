@@ -11,6 +11,9 @@ const client = new Client({
   ],
 });
 
+const ROLE = 'User';
+const CHANNEL = 'general';
+
 client.login(process.env.AUTHORIZATION_TOKEN);
 
 client.on("messageCreate", message => {
@@ -32,32 +35,35 @@ client.on("interactionCreate", async interaction => {
       return interaction.reply('You do not have permission to use this command.');
     }
 
+    await interaction.deferReply();
+
     const channel = interaction.options.getChannel('channel');
     const messages = await channel.messages.fetch({ limit: 100 });
 
     for (const message of messages.values()) {
+      await message.fetch(); // Fetch the message explicitly
       for (const reaction of message.reactions.cache.values()) {
         await reaction.users.fetch();
         for (const user of reaction.users.cache.values()) {
           if (!user.bot) {
-            const member = await reaction.message.guild.members.fetch(user.id);
-            if (member.roles.cache.some(role => role.name === 'YourRoleName')) {
+            const member = await message.guild.members.fetch(user.id);
+            if (member.roles.cache.some(role => role.name === ROLE)) {
               await reaction.users.remove(user.id);
             }
           }
         }
       }
     }
-    interaction.reply(`Reactions cleaned in ${channel.name}`);
+
+    interaction.followUp(`Reactions cleaned in ${channel.name}`);
   }
 });
 
 client.on('messageReactionAdd', async (reaction, user) => {
-  if (reaction.message.channel.name === 'general') {
+  if (reaction.message.channel.name === CHANNEL && !user.bot) {
     const member = await reaction.message.guild.members.fetch(user.id);
-    if (member.roles.cache.some(role => role.name === 'User')) {
+    if (member.roles.cache.some(role => role.name === ROLE)) {
       await reaction.users.remove(user.id);
     }
   }
 });
-
