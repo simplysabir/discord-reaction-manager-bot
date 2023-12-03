@@ -19,3 +19,8 @@ client.on("messageCreate", message => {
         content: "Hi From Bot",
     })
 })
+
+client.on("interactionCreate", interaction => {
+    console.log(interaction);
+    interaction.reply("Pong!")
+})
