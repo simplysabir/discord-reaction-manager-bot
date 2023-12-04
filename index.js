@@ -11,17 +11,11 @@ const client = new Client({
   ],
 });
 
-const ROLE = 'User';
-const CHANNEL = 'general';
-
+// Add additional roles as needed
+const ROLES = ['User']; 
+// Add additional channels as needed
+const CHANNELS = ['general']; 
 client.login(process.env.AUTHORIZATION_TOKEN);
-
-client.on("messageCreate", message => {
-    if(message.author.bot) return;
-    message.reply({
-        content: "Hi From Bot",
-    });
-});
 
 client.on("interactionCreate", async interaction => {
   if (!interaction.isCommand()) return;
@@ -38,16 +32,20 @@ client.on("interactionCreate", async interaction => {
     await interaction.deferReply();
 
     const channel = interaction.options.getChannel('channel');
+    if (!CHANNELS.includes(channel.name)) {
+      return interaction.followUp(`This command is not enabled for the ${channel.name} channel.`);
+    }
+
     const messages = await channel.messages.fetch({ limit: 100 });
 
     for (const message of messages.values()) {
-      await message.fetch(); // Fetch the message explicitly
+      await message.fetch();
       for (const reaction of message.reactions.cache.values()) {
         await reaction.users.fetch();
         for (const user of reaction.users.cache.values()) {
           if (!user.bot) {
             const member = await message.guild.members.fetch(user.id);
-            if (member.roles.cache.some(role => role.name === ROLE)) {
+            if (ROLES.some(roleName => member.roles.cache.some(role => role.name === roleName))) {
               await reaction.users.remove(user.id);
             }
           }
@@ -60,9 +58,9 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.on('messageReactionAdd', async (reaction, user) => {
-  if (reaction.message.channel.name === CHANNEL && !user.bot) {
+  if (CHANNELS.includes(reaction.message.channel.name) && !user.bot) {
     const member = await reaction.message.guild.members.fetch(user.id);
-    if (member.roles.cache.some(role => role.name === ROLE)) {
+    if (ROLES.some(roleName => member.roles.cache.some(role => role.name === roleName))) {
       await reaction.users.remove(user.id);
     }
   }
