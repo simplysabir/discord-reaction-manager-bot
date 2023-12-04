@@ -1,5 +1,5 @@
 {
-  "name": "discord-remove-reaction-bot",
+  "name": "discord-reaction-manager-bot",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
